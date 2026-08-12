@@ -1,12 +1,12 @@
 {
   "apk": {
     "enable": true,
-    "versionName": "1.0.1",
-    "versionCode": 101,
+    "versionName": "1.0.0",
+    "versionCode": 100,
     "name": "qtsl-v100.apk",
     "md5": "803AB1036300CD8F127E6ED0F9B4CC07",
     "forceUpdate": false,
-    "changelog": "实现APP 更新功能"
+    "changelog": "实现APP的基础功能"
   },
   "dataPackList": [
     {
