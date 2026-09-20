@@ -1,14 +1,21 @@
 {
   "apk": {
     "enable": true,
-    "versionName": "1.2.4",
-    "versionCode": 124,
-    "name": "qtsl-v124.apk",
-    "md5": "73944acf6d1df9b9d92563d181157968",
+    "versionName": "1.4.0",
+    "versionCode": 140,
+    "name": "qtsl-v140.apk",
+    "md5": "ea5809aee211aeab9b0076284ec558d5",
     "forceUpdate": true,
     "changelog": "软件更新,修复Bug"
   },
   "dataPackList": [
+    {
+      "versionCode": 109,
+      "minApkCode": 124,
+      "name": "data-v109.zip",
+      "md5": "8e5529e1b807caab9b609afa7037367f",
+      "changelog": "题材统计资源"
+    },
     {
       "versionCode": 108,
       "minApkCode": 124,

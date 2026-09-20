@@ -11,24 +11,17 @@ ASSET_DIR = SCRIPT_PATH.parent / "assets"
 OUTPUT_MD5_TXT = ASSET_DIR / "md5.txt"
 UPDATE_JSON = ASSET_DIR / "update.json"
 
-# 写死固定配置：data‑v106 / data‑v108
-FIXED_ZIP_CONFIG = {
-    "data-v106.zip": {
-        "minApkCode": 100,
-        "changelog": "题材统计资源"
-    },
-    "data-v108.zip": {
-        "minApkCode": 124,
-        "changelog": "题材统计资源"
-    }
+# 固定版本配置，仅磁盘存在该文件时才输出该条目
+FIXED_ZIP = {
+    106: {"minApkCode": 100, "changelog": "题材统计资源"},
+    108: {"minApkCode": 124, "changelog": "题材统计资源"},
 }
-# 大于108的新版本，复制 data‑v108 的配置
-ABOVE_108_TPL = FIXED_ZIP_CONFIG["data-v108.zip"]
+# versionCode >108 的数据包，统一参照108的minApkCode
+BASE_108 = FIXED_ZIP[108]
 # =================================================
 
 
 def calc_md5(file_path: Path, chunk_size=65536) -> str:
-    """计算文件md5"""
     md5_obj = hashlib.md5()
     with open(file_path, "rb") as f:
         while chunk := f.read(chunk_size):
@@ -37,12 +30,6 @@ def calc_md5(file_path: Path, chunk_size=65536) -> str:
 
 
 def extract_version_code(filename: str) -> Optional[int]:
-    """
-    从文件名提取版本号
-    qtsl-v124.apk → 124
-    data-v108.zip →108
-    匹配模式: *-v<num>.ext
-    """
     m = re.search(r"-v(\d+)\.", filename)
     if m:
         return int(m.group(1))
@@ -50,11 +37,9 @@ def extract_version_code(filename: str) -> Optional[int]:
 
 
 def load_update_json() -> Dict[str, Any]:
-    """加载已有update.json，不存在返回基础模板"""
     if UPDATE_JSON.exists():
         with open(UPDATE_JSON, "r", encoding="utf-8") as f:
             return json.load(f)
-    # 基础模板
     return {
         "apk": {
             "enable": True,
@@ -77,7 +62,7 @@ def generate_assets_info():
 
     print(f"🔍 找到APK: {len(apk_files)} 个 | ZIP数据包: {len(zip_files)} 个")
 
-    # 处理APK
+    # 处理APK，取版本最大
     valid_apks = []
     for p in apk_files:
         ver = extract_version_code(p.name)
@@ -94,8 +79,8 @@ def generate_assets_info():
         print(f"📦 选中最新APK: {latest_apk_path.name} , versionCode={latest_apk_ver}")
 
     cfg = load_update_json()
-
     zip_items = []
+
     for p in zip_files:
         fname = p.name
         ver = extract_version_code(fname)
@@ -104,9 +89,9 @@ def generate_assets_info():
             continue
         md5_val = calc_md5(p)
 
-        if fname in FIXED_ZIP_CONFIG:
-            # data‑v106 / data‑v108 使用写死配置
-            conf = FIXED_ZIP_CONFIG[fname]
+        if ver in FIXED_ZIP:
+            # 106 /108，使用固定配置；没有实体文件直接不会进入这里
+            conf = FIXED_ZIP[ver]
             entry = {
                 "versionCode": ver,
                 "minApkCode": conf["minApkCode"],
@@ -114,23 +99,23 @@ def generate_assets_info():
                 "md5": md5_val,
                 "changelog": conf["changelog"]
             }
-            print(f"📄 {fname} 使用固定写死配置")
+            print(f"📄 {fname} 使用固定配置 ver={ver}")
         else:
-            # >108 的新版本，复制108模板
+            # >108 全部沿用108的minApkCode，changelog沿用108模板
             entry = {
                 "versionCode": ver,
-                "minApkCode": ABOVE_108_TPL["minApkCode"],
+                "minApkCode": BASE_108["minApkCode"],
                 "name": fname,
                 "md5": md5_val,
-                "changelog": ABOVE_108_TPL["changelog"]
+                "changelog": BASE_108["changelog"]
             }
-            print(f"📄 {fname} 版本>108，复制data‑v108配置模板")
+            print(f"📄 {fname} ver>{108}，参照108配置")
         zip_items.append(entry)
 
-    # zip按versionCode降序
+    # 按versionCode降序输出
     zip_items.sort(key=lambda x: x["versionCode"], reverse=True)
 
-    # 更新apk块
+    # 更新apk块，保留原有其他字段
     if latest_apk_path is not None:
         apk_md5 = calc_md5(latest_apk_path)
         cfg["apk"]["name"] = latest_apk_path.name
@@ -140,7 +125,6 @@ def generate_assets_info():
 
     cfg["dataPackList"] = zip_items
 
-    # 写回json
     with open(UPDATE_JSON, "w", encoding="utf-8") as f:
         json.dump(cfg, f, ensure_ascii=False, indent=2)
     print(f"✅ update.json 已写入: {UPDATE_JSON.resolve()}")
