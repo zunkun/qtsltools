@@ -1,12 +1,12 @@
 {
   "apk": {
     "enable": true,
-    "versionName": "1.4.0",
-    "versionCode": 140,
-    "name": "qtsl-v140.apk",
-    "md5": "ea5809aee211aeab9b0076284ec558d5",
+    "versionName": "1.4.1",
+    "versionCode": 141,
+    "name": "qtsl-v141.apk",
+    "md5": "6649b6eaa8057f87f7403ae06e150add",
     "forceUpdate": true,
-    "changelog": "软件更新,修复Bug"
+    "changelog": "修复返回键无法返回上一页、状态栏显示问题"
   },
   "dataPackList": [
     {
